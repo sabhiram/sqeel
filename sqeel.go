@@ -30,8 +30,6 @@ type TableDescription struct {
 	PrimaryKey string            // PrimaryKey variable name
 	Keys       []*Key            // List of keys (ordered)
 	Attrs      map[string]string // Custom attrs that the user wants to access
-
-	imports []string // local list of imports we have encountered
 }
 
 // DescribeTable accepts a table name, an interface that employs the sqeel tags
@@ -53,50 +51,25 @@ func DescribeTable(name string, v interface{}, fks, attrs map[string]string) *Ta
 		f := e.Field(i)
 		t := e.Type().Field(i)
 		tag := t.Tag.Get("sqeel")
+
 		st := newtag(tag)
 		if st.IsPrimary {
 			td.PrimaryKey = t.Name
 		}
-		key := &Key{
+
+		td.Keys = append(td.Keys, &Key{
 			Name:     t.Name,
 			GoType:   f.Type().String(),
 			SQLType:  st.Type,
 			SQLAttrs: st.Attrs,
 			Tag:      tag,
-		}
-		tn := key.GoType
-		switch {
-		case tn == "time.Time":
-			td.appendImport("time")
-		case strings.Contains(tn, "."):
-			fmt.Printf("Unknown type %s\n", tn)
-			panic("bad type in table import")
-		}
-		td.Keys = append(td.Keys, key)
+		})
 	}
 
-	if td.PrimaryKey == "" {
+	if len(td.PrimaryKey) <= 0 {
 		panic("Unable to find primary key field")
 	}
 	return td
-}
-
-func (td *TableDescription) appendImport(imp string) {
-	for _, v := range td.imports {
-		if v == imp {
-			return
-		}
-	}
-	td.imports = append(td.imports, imp)
-}
-
-// Imports returns a unique list of all the import types that we have included
-// so far.
-func (td *TableDescription) Imports() []string {
-	if td == nil {
-		return nil
-	}
-	return td.imports
 }
 
 // CreationSchema returns this tables creation schema.
