@@ -42,8 +42,6 @@ func DescribeTable(name string, v interface{}, fks, attrs map[string]string) *Ta
 		PrimaryKey: "",
 		Keys:       []*Key{},
 		Attrs:      attrs,
-
-		imports: []string{},
 	}
 
 	e := reflect.ValueOf(v)
