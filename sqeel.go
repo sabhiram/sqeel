@@ -26,9 +26,10 @@ func (k *Key) SQLDefinition() string {
 
 // TableDescription stores a bunch of interesting things about a SQL table.
 type TableDescription struct {
-	Name       string // Name of the table
-	PrimaryKey string // PrimaryKey variable name
-	Keys       []*Key // List of keys (ordered)
+	Name          string            // Name of the table
+	Keys          []*Key            // List of keys (ordered)
+	PrimaryKeyIdx int               // Index in the `Keys` list of the primary key
+	Attrs         map[string]string // Custom attrs that the user wants to access
 }
 
 // DescribeTable accepts a table name, an interface that employs the sqeel tags
@@ -37,9 +38,10 @@ type TableDescription struct {
 // instance.  Panics on any errors.
 func DescribeTable(name string, v interface{}, fks map[string]string) *TableDescription {
 	td := &TableDescription{
-		Name:       name,
-		PrimaryKey: "",
-		Keys:       []*Key{},
+		Name:          name,
+		Keys:          []*Key{},
+		PrimaryKeyIdx: -1,
+		Attrs:         attrs,
 	}
 
 	e := reflect.ValueOf(v)
@@ -50,7 +52,7 @@ func DescribeTable(name string, v interface{}, fks map[string]string) *TableDesc
 
 		st := newtag(tag)
 		if st.IsPrimary {
-			td.PrimaryKey = t.Name
+			td.PrimaryKeyIdx = i
 		}
 
 		td.Keys = append(td.Keys, &Key{
@@ -62,10 +64,15 @@ func DescribeTable(name string, v interface{}, fks map[string]string) *TableDesc
 		})
 	}
 
-	if len(td.PrimaryKey) <= 0 {
-		panic("Unable to find primary key field")
+	if td.PrimaryKeyIdx < 0 {
+		panic("primary key not specified in sqeel structure")
 	}
 	return td
+}
+
+// PrimaryKey returns the key that is tagged as the tables primary key.
+func (td *TableDescription) PrimaryKey() *Key {
+	return td.Keys[td.PrimaryKeyIdx]
 }
 
 // CreationSchema returns this tables creation schema.
