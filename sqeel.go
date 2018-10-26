@@ -80,7 +80,7 @@ func (td *TableDescription) CreationSchema() string {
 	for _, k := range td.Keys {
 		lines = append(lines, k.SQLDefinition()+",")
 	}
-	lines = append(lines, fmt.Sprintf("PRIMARY KEY (%s)", td.PrimaryKey))
+	lines = append(lines, fmt.Sprintf("PRIMARY KEY (%s)", td.PrimaryKey().Name))
 	return q + strings.Join(lines, "\n") + ");"
 }
 
