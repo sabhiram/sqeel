@@ -26,10 +26,9 @@ func (k *Key) SQLDefinition() string {
 
 // TableDescription stores a bunch of interesting things about a SQL table.
 type TableDescription struct {
-	Name          string            // Name of the table
-	Keys          []*Key            // List of keys (ordered)
-	PrimaryKeyIdx int               // Index in the `Keys` list of the primary key
-	Attrs         map[string]string // Custom attrs that the user wants to access
+	Name          string // Name of the table
+	Keys          []*Key // List of keys (ordered)
+	PrimaryKeyIdx int    // Index in the `Keys` list of the primary key
 }
 
 // DescribeTable accepts a table name, an interface that employs the sqeel tags
@@ -41,7 +40,6 @@ func DescribeTable(name string, v interface{}, fks map[string]string) *TableDesc
 		Name:          name,
 		Keys:          []*Key{},
 		PrimaryKeyIdx: -1,
-		Attrs:         attrs,
 	}
 
 	e := reflect.ValueOf(v)
