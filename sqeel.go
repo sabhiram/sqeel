@@ -82,8 +82,8 @@ func (td *TableDescription) KeyNames() []string {
 	return kns
 }
 
-// CreationSchema returns this tables creation schema.
-func (td *TableDescription) CreationSchema() string {
+// CreateTableQuery returns this tables creation query.
+func (td *TableDescription) CreateTableQuery() string {
 	q := fmt.Sprintf("CREATE TABLE %s (\n", td.Name)
 	lines := []string{}
 	for _, k := range td.Keys {
@@ -93,12 +93,12 @@ func (td *TableDescription) CreationSchema() string {
 	return q + strings.Join(lines, "\n") + ");"
 }
 
-// DeletionSchema returns this tables deletion schema.
-func (td *TableDescription) DeletionSchema() string {
+// DeleteTableQuery returns this tables deletion query.
+func (td *TableDescription) DeleteTableQuery() string {
 	return fmt.Sprintf("DROP TABLE IF EXISTS %s;", td.Name)
 }
 
-// ValidateSchema returns this tables validation schema.
-func (td *TableDescription) ValidateSchema() string {
+// ValidateTableQuery returns this tables validation query.
+func (td *TableDescription) ValidateTableQuery() string {
 	return fmt.Sprintf("SHOW TABLES LIKE '%s';", td.Name)
 }
