@@ -73,6 +73,15 @@ func (td *TableDescription) PrimaryKey() *Key {
 	return td.Keys[td.PrimaryKeyIdx]
 }
 
+// KeyNames returns a list of the key names.
+func (td *TableDescription) KeyNames() []string {
+	kns := []string{}
+	for _, k := range td.Keys {
+		kns = append(kns, k.Name)
+	}
+	return kns
+}
+
 // CreationSchema returns this tables creation schema.
 func (td *TableDescription) CreationSchema() string {
 	q := fmt.Sprintf("CREATE TABLE %s (\n", td.Name)
