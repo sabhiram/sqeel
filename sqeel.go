@@ -8,11 +8,13 @@ import (
 
 // Key stores information about a given SQL key and its creation attributes.
 type Key struct {
-	Name     string // Name of the key
-	GoType   string // The Golang type of the key in string form
-	SQLType  string // The SQL type of the key in string form
-	SQLAttrs string // Additional SQL attributes (optional)
-	Tag      string // Raw tag value
+	Name      string // Name of the key
+	GoType    string // The Golang type of the key in string form
+	SQLType   string // The SQL type of the key in string form
+	SQLAttrs  string // Additional SQL attributes (optional)
+	Tag       string // Raw tag value
+	IsPrimary bool   // If this is the primary key of the table
+	IsUnique  bool   // If this is a unique key in the table
 }
 
 // SQLDefinition returns a keys SQL definition.
@@ -54,11 +56,13 @@ func DescribeTable(name string, v interface{}, fks map[string]string) *TableDesc
 		}
 
 		td.Keys = append(td.Keys, &Key{
-			Name:     t.Name,
-			GoType:   f.Type().String(),
-			SQLType:  st.Type,
-			SQLAttrs: st.Attrs,
-			Tag:      tag,
+			Name:      t.Name,
+			GoType:    f.Type().String(),
+			SQLType:   st.Type,
+			SQLAttrs:  st.Attrs,
+			Tag:       tag,
+			IsPrimary: st.IsPrimary,
+			IsUnique:  st.IsUnique,
 		})
 	}
 
@@ -86,11 +90,16 @@ func (td *TableDescription) KeyNames() []string {
 func (td *TableDescription) CreateTableQuery() string {
 	q := fmt.Sprintf("CREATE TABLE %s (\n", td.Name)
 	lines := []string{}
+	keyls := []string{fmt.Sprintf("PRIMARY KEY (%s)", td.PrimaryKey().Name)}
 	for _, k := range td.Keys {
-		lines = append(lines, k.SQLDefinition()+",")
+		lines = append(lines, k.SQLDefinition())
+		if k.IsUnique {
+			keyls = append(keyls, fmt.Sprintf("UNIQUE KEY (%s)", k.Name))
+		}
 	}
-	lines = append(lines, fmt.Sprintf("PRIMARY KEY (%s)", td.PrimaryKey().Name))
-	return q + strings.Join(lines, "\n") + ");"
+
+	lines = append(lines, keyls...)
+	return q + strings.Join(lines, ",\n") + ");"
 }
 
 // DeleteTableQuery returns this tables deletion query.

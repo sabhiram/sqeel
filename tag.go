@@ -13,6 +13,7 @@ type sqltag struct {
 	Type      string
 	Attrs     string
 	IsPrimary bool
+	IsUnique  bool
 }
 
 // newtag returns a `*sqltag` from a string.
@@ -32,6 +33,8 @@ func newtag(tag string) sqltag {
 			stag.IsPrimary = true
 		case "attrs":
 			stag.Attrs = value
+		case "unique":
+			stag.IsUnique = true
 		default:
 			panic(fmt.Sprintf("invalid key found for sqeel tag (%s)", key))
 		}
