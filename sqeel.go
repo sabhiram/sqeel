@@ -20,7 +20,7 @@ type Key struct {
 
 // SQLDefinition returns a key's SQL definition.
 func (k *Key) SQLDefinition() string {
-	sd := fmt.Sprintf("%s %s", k.Name, k.SQLType)
+	sd := fmt.Sprintf("%s %s", k.SQLName(), k.SQLType)
 	if len(k.SQLAttrs) > 0 {
 		sd += " " + k.SQLAttrs
 	}
@@ -107,15 +107,24 @@ func (td *TableDescription) KeyNames() []string {
 	return kns
 }
 
+// SQLKeyNames returns a list of the key names in sql form.
+func (td *TableDescription) SQLKeyNames() []string {
+	kns := []string{}
+	for _, k := range td.Keys {
+		kns = append(kns, k.SQLName())
+	}
+	return kns
+}
+
 // CreateTableQuery returns this tables creation query.
 func (td *TableDescription) CreateTableQuery() string {
 	q := fmt.Sprintf("CREATE TABLE %s (\n", td.Name)
 	lines := []string{}
-	keyls := []string{fmt.Sprintf("PRIMARY KEY (%s)", td.PrimaryKey().Name)}
+	keyls := []string{fmt.Sprintf("PRIMARY KEY (%s)", td.PrimaryKey().SQLName())}
 	for _, k := range td.Keys {
 		lines = append(lines, k.SQLDefinition())
 		if k.IsUnique {
-			keyls = append(keyls, fmt.Sprintf("UNIQUE KEY (%s)", k.Name))
+			keyls = append(keyls, fmt.Sprintf("UNIQUE KEY (%s)", k.SQLName()))
 		}
 	}
 
