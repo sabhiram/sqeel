@@ -8,22 +8,38 @@ import (
 
 // Key stores information about a given SQL key and its creation attributes.
 type Key struct {
-	Name      string // Name of the key
-	GoType    string // The Golang type of the key in string form
-	SQLType   string // The SQL type of the key in string form
-	SQLAttrs  string // Additional SQL attributes (optional)
-	Tag       string // Raw tag value
-	IsPrimary bool   // If this is the primary key of the table
-	IsUnique  bool   // If this is a unique key in the table
+	Name       string // Name of the key
+	ColumnName string // Optional, override with `name` tag
+	GoType     string // The Golang type of the key in string form
+	SQLType    string // The SQL type of the key in string form
+	SQLAttrs   string // Additional SQL attributes (optional)
+	Tag        string // Raw tag value
+	IsPrimary  bool   // If this is the primary key of the table
+	IsUnique   bool   // If this is a unique key in the table
 }
 
-// SQLDefinition returns a keys SQL definition.
+// SQLDefinition returns a key's SQL definition.
 func (k *Key) SQLDefinition() string {
 	sd := fmt.Sprintf("%s %s", k.Name, k.SQLType)
 	if len(k.SQLAttrs) > 0 {
 		sd += " " + k.SQLAttrs
 	}
 	return sd
+}
+
+// GoName returns the name of the key as created in the source struct.  This is
+// the go type.
+func (k *Key) GoName() string {
+	return k.Name
+}
+
+// SQLName returns the name of the key as created in the source table.  This is
+// the sql column name.
+func (k *Key) SQLName() string {
+	if len(k.ColumnName) > 0 {
+		return k.ColumnName
+	}
+	return ToSnakeCase(k.Name)
 }
 
 // TableDescription stores a bunch of interesting things about a SQL table.
@@ -55,7 +71,7 @@ func DescribeTable(name string, v interface{}, fks map[string]string) *TableDesc
 			td.PrimaryKeyIdx = i
 		}
 
-		td.Keys = append(td.Keys, &Key{
+		k := &Key{
 			Name:      t.Name,
 			GoType:    f.Type().String(),
 			SQLType:   st.Type,
@@ -63,7 +79,12 @@ func DescribeTable(name string, v interface{}, fks map[string]string) *TableDesc
 			Tag:       tag,
 			IsPrimary: st.IsPrimary,
 			IsUnique:  st.IsUnique,
-		})
+		}
+
+		if len(st.NameOverride) > 0 {
+			k.ColumnName = st.NameOverride
+		}
+		td.Keys = append(td.Keys, k)
 	}
 
 	if td.PrimaryKeyIdx < 0 {

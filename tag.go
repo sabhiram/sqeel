@@ -10,10 +10,11 @@ import (
 // to specify the primary key attribute is to set the second comma-separated
 // value in the tag to an enable or "PRIMARYKEY".
 type sqltag struct {
-	Type      string
-	Attrs     string
-	IsPrimary bool
-	IsUnique  bool
+	NameOverride string
+	Type         string
+	Attrs        string
+	IsPrimary    bool
+	IsUnique     bool
 }
 
 // newtag returns a `*sqltag` from a string.
@@ -29,12 +30,14 @@ func newtag(tag string) sqltag {
 		switch key {
 		case "type":
 			stag.Type = value
-		case "is_primary":
+		case "is_primary", "primary", "primary_key", "primarykey":
 			stag.IsPrimary = true
 		case "attrs":
 			stag.Attrs = value
 		case "unique":
 			stag.IsUnique = true
+		case "name", "column_name":
+			stag.NameOverride = value
 		default:
 			panic(fmt.Sprintf("invalid key found for sqeel tag (%s)", key))
 		}
